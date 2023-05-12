@@ -1,0 +1,74 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "defaultValue": "remote-code-compiler-aks"
+        },
+        "publicSshKey": {
+            "type": "string",
+            "defaultValue": null
+        },
+        "principalClientId": {
+            "type": "string",
+            "defaultValue": null
+        },
+        "principalClientSecret": {
+            "type": "string",
+            "defaultValue": null
+        },
+        "nbVmNodes": {
+            "type": "int",
+            "defaultValue": 1
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_A2_v2"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('clusterName')]",
+            "type": "Microsoft.ContainerService/managedClusters",
+            "apiVersion": "2021-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "kubernetesVersion": "1.23.5",
+                "dnsPrefix": "dnsprefix",
+                "agentPoolProfiles": [
+                    {
+                        "name": "agentpool",
+                        "count": "[parameters('nbVmNodes')]",
+                        "vmSize": "[parameters('vmSize')]",
+                        "osType": "Linux",
+                        "storageProfile": "ManagedDisks",
+                        "maxPods": 31,
+                        "minCount": 1,
+                        "maxCount": 100,
+                        "enableAutoScaling": true,
+                        "type": "VirtualMachineScaleSets",
+                        "mode": "System"
+                    }
+                ],
+                "linuxProfile": {
+                    "adminUsername": "adminUserName",
+                    "ssh": {
+                        "publicKeys": [
+                            {
+                                "keyData": "[parameters('publicSshKey')]"
+                            }
+                        ]
+                    }
+                },
+                "servicePrincipalProfile": {
+                    "clientId": "[parameters('principalClientId')]",
+                    "secret": "[parameters('principalClientSecret')]"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

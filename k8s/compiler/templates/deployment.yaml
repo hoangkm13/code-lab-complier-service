@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "compiler.fullname" . }}
+  labels:
+    {{- include "compiler.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "compiler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "compiler.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: "environment-builder"
+          image: "{{ .Values.initContainerImage.repository }}:{{ .Values.initContainerImage.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - mountPath: /var/run # volume used for docker
+              name: executions-volume
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.image.port }}
+              protocol: TCP
+              # check for lifetime liveness, restarts if not status 200
+          {{ if .Values.kafka.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.health.liveness }}
+              port: {{ .Values.image.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          {{ end }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.health.readiness }}
+              port: {{ .Values.image.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+            - secretRef:
+                name: {{ .Release.Name }}-secrets
+          volumeMounts:
+            - mountPath: /var/run # volume used for docker
+              name: executions-volume
+            - mountPath: {{ .Values.compiler.path }}
+              name: compilation-volume
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: executions-volume
+          hostPath:
+            # directory location on host
+            path: /var/run
+            type: DirectoryOrCreate
+        - name: compilation-volume
+          hostPath:
+            path: {{ .Values.compiler.path }}
+            type: DirectoryOrCreate
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

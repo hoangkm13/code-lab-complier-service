@@ -1,0 +1,5 @@
+# Default values for monitoring.
+
+prometheus:
+  targetService:
+    url: compiler:80

@@ -1,0 +1,11 @@
+FROM denvazh/scala
+
+WORKDIR /app
+
+USER root
+
+ADD . .
+
+RUN chmod a+x ./entrypoint-*.sh
+
+ENTRYPOINT ["/bin/sh", "-c", "./entrypoint-$TEST_CASE_ID.sh"]
