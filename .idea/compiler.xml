@@ -7,15 +7,19 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="compiler" />
         <module name="code-lab-complier service" />
-        <module name="code-lab-complier-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="code-lab-complier-service" target="11" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="code-lab-complier service" options="-parameters" />
       <module name="code-lab-complier-service" options="-parameters" />
+      <module name="compiler" options="-parameters" />
     </option>
   </component>
 </project>
