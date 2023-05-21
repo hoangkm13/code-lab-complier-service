@@ -5,9 +5,7 @@ WORKDIR /compiler
 COPY . .
 RUN ["mvn", "clean", "install", "-Dmaven.test.skip=true"]
 
-
 # Run stage
-
 FROM openjdk:11.0.6-jre-slim
 WORKDIR /compiler
 
