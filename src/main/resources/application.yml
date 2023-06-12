@@ -5,7 +5,7 @@ server:
     include-stacktrace: never
 
 compiler:
-  max-test-cases: ${MAX_TEST_CASES:20} # maximum number of test cases a request should handle
+  max-test-cases: ${MAX_TEST_CASES:100000} # maximum number of test cases a request should handle
   compilation-container:
     volume: ${COMPILATION_CONTAINER_VOLUME:} # only when running the app inside a container
   execution:
